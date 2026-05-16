@@ -1,0 +1,51 @@
+use_default_settings: true
+
+general:
+  debug: false
+  instance_name: "AutoPatch SearXNG"
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "en"
+
+server:
+  port: 8080
+  bind_address: "0.0.0.0"
+  secret_key: "autopatch-searxng-secret-key-change-in-production"
+  base_url: false
+  image_proxy: false
+
+ui:
+  static_use_hash: false
+
+outgoing:
+  request_timeout: 3.0
+  max_request_timeout: 10.0
+
+engines:
+  - name: duckduckgo
+    engine: duckduckgo
+    categories: general
+    shortcut: ddg
+
+  - name: google
+    engine: google
+    categories: general
+    shortcut: g
+    use_mobile_ui: false
+
+  - name: bing
+    engine: bing
+    categories: general
+    shortcut: b
+
+  - name: stackoverflow
+    engine: stackoverflow
+    categories: it
+    shortcut: so
+
+  - name: github
+    engine: github
+    categories: it
+    shortcut: gh

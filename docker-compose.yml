@@ -1,0 +1,130 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: autopatch-postgres
+    environment:
+      POSTGRES_USER: autopatch
+      POSTGRES_PASSWORD: autopatch
+      POSTGRES_DB: autopatch
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autopatch"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - autopatch-net
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: autopatch-chromadb
+    volumes:
+      - chroma_data:/chroma/chroma
+    ports:
+      - "8001:8000"
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    networks:
+      - autopatch-net
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: autopatch-searxng
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./infra/searxng:/etc/searxng:rw
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8080/
+    networks:
+      - autopatch-net
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: autopatch-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - autopatch-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  python-sandbox:
+    build:
+      context: ./sandbox/python
+      dockerfile: Dockerfile
+    image: autopatch-python-sandbox:latest
+    networks:
+      - sandbox-net
+
+  java-sandbox:
+    build:
+      context: ./sandbox/java
+      dockerfile: Dockerfile
+    image: autopatch-java-sandbox:latest
+    networks:
+      - sandbox-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: autopatch-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://autopatch:autopatch@postgres:5432/autopatch
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      - SEARXNG_BASE_URL=http://searxng:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/autopatch:/tmp/autopatch
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    networks:
+      - autopatch-net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: autopatch-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - autopatch-net
+
+volumes:
+  postgres_data:
+  chroma_data:
+  ollama_data:
+
+networks:
+  autopatch-net:
+    driver: bridge
+  sandbox-net:
+    driver: bridge
+    internal: true
