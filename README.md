@@ -347,26 +347,4 @@ Max iterations hit:    → capped at 0.65
 
 ---
 
-## FAANG Interview Talking Points
 
-1. **Infinite loop prevention**: `max_iterations` cap + Judge FAIL decision terminate the loop
-2. **Why Docker sandboxing**: Untrusted code execution requires strict isolation; prevents host filesystem access, network calls, and privilege escalation
-3. **No arbitrary LLM commands**: Only allowlisted commands (`python -m pytest`, `mvn test`) are passed to Docker; LLM output goes to source code only
-4. **LangGraph control flow**: Graph nodes are pure functions on a shared state object; the loop is driven by the Judge node's decision
-5. **Confidence scoring**: Multi-factor scoring combining pass/fail, iteration count, memory hits, and new error detection
-6. **Memory for improvement**: ChromaDB stores successful fixes as embeddings; cosine similarity retrieves relevant past solutions
-7. **Python vs Java repair**: Python uses pytest stdout parsing; Java uses Maven build output and JUnit XML; error classification patterns differ
-8. **Scaling**: Replace background tasks with Celery workers; use a pool of pre-warmed Docker containers; add Redis for event brokering
-9. **GitHub PR bot**: Trigger repair on failed CI webhook; commit fix to a branch; open PR with explanation and confidence score
-10. **Agentic AI demonstration**: Shows tool use (Docker, LLM, search, DB), evaluation (Judge), memory (ChromaDB), and self-correction (retry loop)
-
----
-
-## Resume Bullets
-
-- Built **AutoPatch AI**, a free local multi-language self-healing code agent using **LangGraph, FastAPI, Ollama, Docker sandboxing, ChromaDB, and React** to automatically repair failing Python and Java code with zero paid API dependencies
-- Designed a **six-node agentic repair loop** (Test Runner, Error Analyzer, Knowledge Retriever, Code Fixer, Judge, Memory Writer) that iteratively fixes code until pytest/JUnit tests pass, with configurable retry limits and confidence scoring
-- Implemented **secure Docker-based sandbox execution** for pytest and Maven/JUnit with network isolation, CPU/memory limits, command allowlisting, and automatic cleanup — preventing arbitrary code execution on the host
-- Added **ChromaDB vector memory** with cosine similarity search to retrieve successful historical fixes, reducing LLM hallucinations and improving repair accuracy on recurring error patterns
-- Built a **production-grade React developer dashboard** with Monaco-style code editors, live agent timeline via Server-Sent Events, diff viewer, repair history, memory browser, and Recharts analytics
-- Integrated **SearXNG + DuckDuckGo fallback** web search for retrieval-augmented repair context, with graceful degradation when search is unavailable
